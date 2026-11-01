@@ -5,6 +5,8 @@ import type {
   CreateResearchRequest,
   ApiResponse,
   HealthResponse,
+  AuthResponseData,
+  UserProfile,
 } from '@/types';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -27,9 +29,17 @@ async function apiRequest<T>(
   body?: unknown
 ): Promise<T> {
   const url = `${BASE_URL}${path}`;
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
+
+  // Attach stored JWT if available
+  try {
+    const token = localStorage.getItem('dds_auth_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  } catch {}
 
   const config: RequestInit = {
     method,
@@ -68,6 +78,27 @@ async function apiRequest<T>(
   }
 
   return data.data as T;
+}
+
+// Authentication endpoints
+export function loginWithGoogle(idToken: string): Promise<AuthResponseData> {
+  return apiRequest<AuthResponseData>('POST', '/api/v1/auth/google', { idToken });
+}
+
+export function loginWithEmail(email: string, password: string): Promise<AuthResponseData> {
+  return apiRequest<AuthResponseData>('POST', '/api/v1/auth/login', { email, password });
+}
+
+export function registerWithEmail(
+  name: string,
+  email: string,
+  password: string
+): Promise<AuthResponseData> {
+  return apiRequest<AuthResponseData>('POST', '/api/v1/auth/register', { name, email, password });
+}
+
+export function getCurrentUser(): Promise<UserProfile> {
+  return apiRequest<UserProfile>('GET', '/api/v1/auth/me');
 }
 
 // Research endpoints

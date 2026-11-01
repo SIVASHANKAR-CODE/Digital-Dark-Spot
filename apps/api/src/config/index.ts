@@ -6,7 +6,9 @@ export interface AppConfig {
   port: number;
   nodeEnv: string;
   corsOrigin: string;
-  mongodbUri: string;
+  supabaseUrl: string;
+  supabaseKey: string;
+  supabaseServiceRoleKey: string;
   geminiApiKey: string;
   openaiApiKey: string;
   aiProvider: 'gemini' | 'openai' | 'demo';
@@ -17,6 +19,10 @@ export interface AppConfig {
   maxSources: number;
   maxContentLength: number;
   requestTimeoutMs: number;
+  googleClientId: string;
+  googleClientSecret: string;
+  jwtSecret: string;
+  jwtExpiresIn: string;
 }
 
 function getEnv(key: string, fallback: string = ''): string {
@@ -34,7 +40,9 @@ export const config: AppConfig = {
   port: getEnvInt('PORT', 3001),
   nodeEnv: getEnv('NODE_ENV', 'development'),
   corsOrigin: getEnv('CORS_ORIGIN', 'http://localhost:5173'),
-  mongodbUri: getEnv('MONGODB_URI', ''),
+  supabaseUrl: getEnv('SUPABASE_URL', ''),
+  supabaseKey: getEnv('SUPABASE_KEY', getEnv('SUPABASE_ANON_KEY', '')),
+  supabaseServiceRoleKey: getEnv('SUPABASE_SERVICE_ROLE_KEY', ''),
   geminiApiKey: getEnv('GEMINI_API_KEY', ''),
   openaiApiKey: getEnv('OPENAI_API_KEY', ''),
   aiProvider: (getEnv('AI_PROVIDER', 'demo') as AppConfig['aiProvider']),
@@ -45,6 +53,10 @@ export const config: AppConfig = {
   maxSources: getEnvInt('MAX_SOURCES', 10),
   maxContentLength: getEnvInt('MAX_CONTENT_LENGTH', 50000),
   requestTimeoutMs: getEnvInt('REQUEST_TIMEOUT_MS', 30000),
+  googleClientId: getEnv('GOOGLE_CLIENT_ID', ''),
+  googleClientSecret: getEnv('GOOGLE_CLIENT_SECRET', ''),
+  jwtSecret: getEnv('JWT_SECRET', 'dds_jwt_secret_dev_key_change_in_production'),
+  jwtExpiresIn: getEnv('JWT_EXPIRES_IN', '7d'),
 };
 
 /** Log config summary without exposing secrets */
@@ -57,7 +69,8 @@ export function logConfigSummary(): void {
   console.log('[Config] OpenAI API Key:', config.openaiApiKey ? '***configured***' : 'not set');
   console.log('[Config] Search Provider:', config.searchProvider);
   console.log('[Config] Search API Key:', config.searchApiKey ? '***configured***' : 'not set');
-  console.log('[Config] MongoDB URI:', config.mongodbUri ? '***configured***' : 'not set (using in-memory)');
+  console.log('[Config] Supabase:', config.supabaseUrl ? '***configured***' : 'not set (using local/in-memory)');
+  console.log('[Config] Google Client ID:', config.googleClientId ? '***configured***' : 'not set (client flow active)');
   console.log('[Config] Rate Limit:', `${config.rateLimitMaxRequests} requests per ${config.rateLimitWindowMs}ms`);
   console.log('[Config] Max Sources:', config.maxSources);
 }

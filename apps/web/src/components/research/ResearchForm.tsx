@@ -142,18 +142,20 @@ export function ResearchForm({ onSubmit, isLoading = false }: ResearchFormProps)
             <div className="space-y-2.5">
               {urls.map((url, idx) => (
                 <div key={idx} className="flex items-center gap-2">
-                  <Input
-                    placeholder="https://example.edu/program-rules"
-                    value={url}
-                    onChange={(e) => handleUrlChange(idx, e.target.value)}
-                    leftIcon={<Globe className="w-4 h-4 text-slate-400" />}
-                  />
+                  <div className="flex-1 min-w-0">
+                    <Input
+                      placeholder="https://example.edu/program-rules"
+                      value={url}
+                      onChange={(e) => handleUrlChange(idx, e.target.value)}
+                      leftIcon={<Globe className="w-4 h-4 text-slate-400 flex-shrink-0" />}
+                    />
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => handleRemoveUrl(idx)}
-                    className="p-2 text-slate-400 hover:text-rose-600"
+                    className="p-2 text-slate-400 hover:text-rose-600 flex-shrink-0"
                     title="Remove URL"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -176,9 +178,9 @@ export function ResearchForm({ onSubmit, isLoading = false }: ResearchFormProps)
             )}
           </div>
 
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+          <div className="pt-4 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
-              <HelpCircle className="w-3.5 h-3.5" />
+              <HelpCircle className="w-3.5 h-3.5 flex-shrink-0" />
               <span>SSRF-protected content extraction & normalization</span>
             </div>
             <Button
@@ -186,6 +188,7 @@ export function ResearchForm({ onSubmit, isLoading = false }: ResearchFormProps)
               variant="primary"
               size="lg"
               isLoading={isLoading}
+              className="w-full sm:w-auto"
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
               Start Analysis
@@ -196,4 +199,3 @@ export function ResearchForm({ onSubmit, isLoading = false }: ResearchFormProps)
     </Card>
   );
 }
-

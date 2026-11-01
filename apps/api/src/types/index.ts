@@ -221,3 +221,57 @@ export interface DemoIndicator {
   reason?: string;
 }
 
+// User & Authentication Types
+export type UserRole = 'user' | 'admin' | 'researcher';
+export type AuthProviderType = 'local' | 'google';
+
+export interface UserRecord {
+  id: string;
+  email: string;
+  name: string;
+  passwordHash?: string;
+  avatar?: string;
+  role: UserRole;
+  authProvider: AuthProviderType;
+  googleId?: string;
+  emailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt?: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+  role: UserRole;
+  authProvider: AuthProviderType;
+  emailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt?: string;
+}
+
+export interface AuthResponseData {
+  user: UserProfile;
+  token: string;
+  expiresIn: string;
+}
+
+export interface GoogleAuthRequest {
+  idToken: string;
+}
+
+export interface LocalLoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LocalRegisterRequest {
+  name: string;
+  email: string;
+  password: string;
+}
+
+

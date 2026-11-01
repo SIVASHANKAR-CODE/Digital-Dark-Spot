@@ -2,9 +2,13 @@ import React, { Suspense, lazy } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { Layout } from '../components/layout/Layout';
 import { Spinner } from '../components/ui/Spinner';
+import { ProtectedRoute } from '../components/ProtectedRoute';
 
 const LandingPage = lazy(() =>
   import('../pages/LandingPage').then((m) => ({ default: m.LandingPage }))
+);
+const LoginPage = lazy(() =>
+  import('../pages/LoginPage').then((m) => ({ default: m.LoginPage }))
 );
 const ResearchPage = lazy(() =>
   import('../pages/ResearchPage').then((m) => ({ default: m.ResearchPage }))
@@ -34,6 +38,16 @@ function PageLoading() {
 }
 
 export const router = createBrowserRouter([
+  // Login page — standalone layout (no Header/Footer)
+  {
+    path: '/login',
+    element: (
+      <Suspense fallback={<PageLoading />}>
+        <LoginPage />
+      </Suspense>
+    ),
+  },
+  // Main app layout
   {
     path: '/',
     element: <Layout />,
@@ -50,7 +64,9 @@ export const router = createBrowserRouter([
         path: 'research',
         element: (
           <Suspense fallback={<PageLoading />}>
-            <ResearchPage />
+            <ProtectedRoute>
+              <ResearchPage />
+            </ProtectedRoute>
           </Suspense>
         ),
       },
@@ -58,7 +74,9 @@ export const router = createBrowserRouter([
         path: 'research/:id',
         element: (
           <Suspense fallback={<PageLoading />}>
-            <ResearchWorkspacePage />
+            <ProtectedRoute>
+              <ResearchWorkspacePage />
+            </ProtectedRoute>
           </Suspense>
         ),
       },
@@ -66,7 +84,9 @@ export const router = createBrowserRouter([
         path: 'research/:id/report',
         element: (
           <Suspense fallback={<PageLoading />}>
-            <ReportPage />
+            <ProtectedRoute>
+              <ReportPage />
+            </ProtectedRoute>
           </Suspense>
         ),
       },
@@ -74,7 +94,9 @@ export const router = createBrowserRouter([
         path: 'saved',
         element: (
           <Suspense fallback={<PageLoading />}>
-            <SavedResearchPage />
+            <ProtectedRoute>
+              <SavedResearchPage />
+            </ProtectedRoute>
           </Suspense>
         ),
       },
@@ -82,7 +104,9 @@ export const router = createBrowserRouter([
         path: 'settings',
         element: (
           <Suspense fallback={<PageLoading />}>
-            <SettingsPage />
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
           </Suspense>
         ),
       },
@@ -97,4 +121,3 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
-

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import {
   getResearch,
   analyzeResearch,
@@ -7,7 +7,7 @@ import {
   toggleChecklistItem,
   addChecklistItem,
 } from '../lib/api';
-import { ResearchSession, DashboardTab, Priority } from '@/types';
+import { ResearchSession, Priority } from '@/types';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Tabs, TabItem } from '../components/ui/Tabs';
@@ -40,7 +40,6 @@ import {
 
 export function ResearchWorkspacePage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
 
   const [session, setSession] = useState<ResearchSession | null>(null);
   const [activeTab, setActiveTab] = useState<string>('overview');
@@ -72,19 +71,15 @@ export function ResearchWorkspacePage() {
     try {
       setIsAnalyzing(true);
       setError(null);
-      // Update UI to running state immediately
       setSession((prev) => (prev ? { ...prev, status: 'extracting' } : null));
 
-      // Trigger analyze
       await analyzeResearch(id);
 
-      // Reload fresh completed data
       const updated = await getResearch(id);
       setSession(updated);
     } catch (err: any) {
       console.error('[Workspace] Run analysis error:', err);
       setError(err.message || 'Analysis run encountered an issue');
-      // Reload session to reflect current status
       try {
         const fallback = await getResearch(id);
         setSession(fallback);
@@ -109,7 +104,6 @@ export function ResearchWorkspacePage() {
 
   const handleToggleChecklist = async (itemId: string) => {
     if (!id || !session) return;
-    // Optimistic UI update
     setSession((prev) => {
       if (!prev) return prev;
       return {
@@ -122,8 +116,7 @@ export function ResearchWorkspacePage() {
 
     try {
       await toggleChecklistItem(id, itemId);
-    } catch (err) {
-      // Revert if failed
+    } catch {
       loadSession();
     }
   };
@@ -169,7 +162,6 @@ export function ResearchWorkspacePage() {
   const hasAnalysis = session.status === 'completed' && !!session.analysis;
   const isRunning = isAnalyzing || session.status === 'extracting' || session.status === 'analyzing';
 
-  // Construct tab items with real counts
   const tabs: TabItem[] = [
     {
       id: 'overview',
@@ -216,9 +208,9 @@ export function ResearchWorkspacePage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full space-y-6">
       {/* Top Breadcrumb & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <Link
           to="/research"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
@@ -227,12 +219,13 @@ export function ResearchWorkspacePage() {
           <span>New Research Session</span>
         </Link>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
           {hasAnalysis && (
-            <Link to={`/research/${session.id}/report`}>
+            <Link to={`/research/${session.id}/report`} className="flex-1 sm:flex-initial">
               <Button
                 variant="outline"
                 size="sm"
+                className="w-full sm:w-auto"
                 leftIcon={<Printer className="w-3.5 h-3.5" />}
               >
                 View Dossier / Print
@@ -245,6 +238,7 @@ export function ResearchWorkspacePage() {
             size="sm"
             onClick={handleStartAnalysis}
             isLoading={isRunning}
+            className="flex-1 sm:flex-initial"
             leftIcon={hasAnalysis ? <RotateCcw className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
           >
             {hasAnalysis ? 'Re-Analyze All Sources' : 'Run Gap Detection'}
@@ -253,7 +247,7 @@ export function ResearchWorkspacePage() {
       </div>
 
       {/* Session Title Header Card */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-xs">
         <div className="flex flex-wrap items-center gap-2 mb-2.5">
           <Badge
             variant={
@@ -277,12 +271,12 @@ export function ResearchWorkspacePage() {
           )}
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight leading-snug">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-950 tracking-tight leading-snug">
           {session.question}
         </h1>
 
         {session.objective && (
-          <p className="mt-2 text-sm text-slate-600 font-normal leading-relaxed">
+          <p className="mt-2 text-xs sm:text-sm text-slate-600 font-normal leading-relaxed">
             <span className="font-semibold text-slate-800">Target Objective: </span>
             {session.objective}
           </p>
@@ -301,12 +295,12 @@ export function ResearchWorkspacePage() {
 
       {/* If Not Analyzed Yet, Prompt User to Review Sources and Analyze */}
       {!hasAnalysis && !isRunning && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-6">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-8 space-y-6">
           <div className="max-w-2xl">
-            <h2 className="text-lg font-bold text-slate-900">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
               Review Sources Prior to Grounding
             </h2>
-            <p className="mt-1 text-sm text-slate-600 leading-relaxed">
+            <p className="mt-1 text-xs sm:text-sm text-slate-600 leading-relaxed">
               Verify your URLs below or add additional references. When ready, click{' '}
               <strong>"Run Gap Detection"</strong> to extract page contents, cross-verify claims,
               and identify missing information.
@@ -325,6 +319,7 @@ export function ResearchWorkspacePage() {
               variant="primary"
               onClick={handleStartAnalysis}
               isLoading={isRunning}
+              className="w-full sm:w-auto"
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
               Analyze Sources Now
@@ -337,12 +332,14 @@ export function ResearchWorkspacePage() {
       {hasAnalysis && session.analysis && (
         <div className="space-y-6">
           {/* Navigation Tab Bar */}
-          <Tabs
-            tabs={tabs}
-            activeTab={activeTab}
-            onChange={(tab) => setActiveTab(tab)}
-            className="bg-white rounded-xl border border-slate-200 px-4 pt-1 shadow-2xs"
-          />
+          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+            <Tabs
+              tabs={tabs}
+              activeTab={activeTab}
+              onChange={(tab) => setActiveTab(tab)}
+              className="bg-white rounded-xl border border-slate-200 px-3 sm:px-4 pt-1 shadow-2xs min-w-max sm:min-w-0"
+            />
+          </div>
 
           {/* Active Tab Panel */}
           <div>
@@ -385,7 +382,7 @@ export function ResearchWorkspacePage() {
             )}
 
             {activeTab === 'sources' && (
-              <div className="bg-white p-6 rounded-xl border border-slate-200">
+              <div className="bg-white p-4 sm:p-6 rounded-xl border border-slate-200">
                 <SourceList
                   sources={session.sources}
                   onAddSources={handleAddSources}
@@ -399,4 +396,3 @@ export function ResearchWorkspacePage() {
     </div>
   );
 }
-

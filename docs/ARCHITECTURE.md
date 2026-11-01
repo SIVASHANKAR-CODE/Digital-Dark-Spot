@@ -68,7 +68,7 @@ User Input (Research Question + URLs)
 
 ## Key Design Decisions
 
-1. **In-Memory Store** — Simpler than MongoDB for hackathon. Can swap to MongoDB via config.
+1. **Supabase (PostgreSQL)** — Persistent database with in-memory/file fallback when not configured. Can run offline without Supabase.
 2. **Demo Mode** — Works without API keys. Clearly labelled demo data.
 3. **Structured AI Prompts** — JSON schema output rather than free-form text parsing.
 4. **Source-Grounded Analysis** — Every finding must reference actual retrieved sources.

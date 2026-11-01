@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Source } from '@/types';
 import { Badge } from '../ui/Badge';
-import { Button } from '../ui/Button';
 import { ExternalLink, ChevronDown, ChevronUp, Calendar, AlertCircle, FileText } from 'lucide-react';
 
 export interface SourceCardProps {
@@ -30,18 +29,18 @@ export function SourceCard({ source, index }: SourceCardProps) {
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs hover:border-slate-300 transition-colors">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">
+    <div className="bg-white border border-slate-200 rounded-xl p-3.5 sm:p-4 shadow-2xs hover:border-slate-300 transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
+        <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">
             S{index + 1}
           </div>
-          <div className="min-w-0">
-            <h4 className="text-sm font-semibold text-slate-900 truncate">
+          <div className="min-w-0 flex-1">
+            <h4 className="text-xs sm:text-sm font-semibold text-slate-900 truncate">
               {source.title || source.domain || 'Source Document'}
             </h4>
-            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-500">
-              <span className="font-mono text-slate-600 truncate max-w-xs">{source.domain}</span>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-1 text-[11px] sm:text-xs text-slate-500">
+              <span className="font-mono text-slate-600 truncate max-w-[200px] sm:max-w-xs">{source.domain}</span>
               {source.publishedDate && (
                 <>
                   <span>&bull;</span>
@@ -61,7 +60,7 @@ export function SourceCard({ source, index }: SourceCardProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-shrink-0">
           {getStatusBadge()}
           <a
             href={source.url}
@@ -70,7 +69,7 @@ export function SourceCard({ source, index }: SourceCardProps) {
             className="p-1 text-slate-400 hover:text-indigo-600 rounded"
             title="Open original source URL"
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </a>
         </div>
       </div>
@@ -78,7 +77,7 @@ export function SourceCard({ source, index }: SourceCardProps) {
       {source.error && (
         <div className="mt-3 p-2.5 rounded-lg bg-rose-50 text-rose-700 text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          <span>{source.error}</span>
+          <span className="break-all">{source.error}</span>
         </div>
       )}
 
@@ -89,7 +88,7 @@ export function SourceCard({ source, index }: SourceCardProps) {
             className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors"
           >
             <FileText className="w-3.5 h-3.5" />
-            <span>{expanded ? 'Hide Extracted Evidence Excerpt' : 'View Extracted Excerpt'}</span>
+            <span>{expanded ? 'Hide Extracted Excerpt' : 'View Extracted Excerpt'}</span>
             {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
 
@@ -103,4 +102,3 @@ export function SourceCard({ source, index }: SourceCardProps) {
     </div>
   );
 }
-

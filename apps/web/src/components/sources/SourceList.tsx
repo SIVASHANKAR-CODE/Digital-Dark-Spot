@@ -31,11 +31,11 @@ export function SourceList({ sources, onAddSources, isLoading = false }: SourceL
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-slate-900">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
+        <h3 className="text-sm sm:text-base font-semibold text-slate-900">
           Source Collection ({sources.length})
         </h3>
-        <span className="text-xs text-slate-500">
+        <span className="text-[11px] sm:text-xs text-slate-500">
           All external inputs undergo SSRF filtering and HTML sanitization
         </span>
       </div>
@@ -48,8 +48,8 @@ export function SourceList({ sources, onAddSources, isLoading = false }: SourceL
 
       {onAddSources && (
         <form onSubmit={handleAdd} className="mt-4 pt-4 border-t border-slate-200">
-          <div className="flex gap-2">
-            <div className="flex-1">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex-1 min-w-0">
               <Input
                 placeholder="Add another source URL (e.g. https://example.com/facts)"
                 value={newUrl}
@@ -62,6 +62,7 @@ export function SourceList({ sources, onAddSources, isLoading = false }: SourceL
               type="submit"
               variant="outline"
               disabled={isLoading || !newUrl.trim()}
+              className="w-full sm:w-auto"
               leftIcon={<Plus className="w-4 h-4" />}
             >
               Add Source
@@ -72,4 +73,3 @@ export function SourceList({ sources, onAddSources, isLoading = false }: SourceL
     </div>
   );
 }
-

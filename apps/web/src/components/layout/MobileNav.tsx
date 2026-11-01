@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { clsx } from 'clsx';
-import { X, Compass, Wifi, WifiOff } from 'lucide-react';
+import { X, Compass, Wifi, WifiOff, LogOut, User } from 'lucide-react';
 
 interface NavItem {
   name: string;
@@ -14,9 +14,11 @@ interface MobileNavProps {
   onClose: () => void;
   navItems: NavItem[];
   isOnline: boolean;
+  user?: { name: string; email: string; avatar?: string; role?: string } | null;
+  onLogout?: () => void;
 }
 
-export function MobileNav({ isOpen, onClose, navItems, isOnline }: MobileNavProps) {
+export function MobileNav({ isOpen, onClose, navItems, isOnline, user, onLogout }: MobileNavProps) {
   if (!isOpen) return null;
 
   return (
@@ -46,6 +48,29 @@ export function MobileNav({ isOpen, onClose, navItems, isOnline }: MobileNavProp
           </button>
         </div>
 
+        {/* User Info */}
+        {user && (
+          <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="w-9 h-9 rounded-full object-cover border border-indigo-200"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold border border-indigo-200">
+                  {user.name?.charAt(0).toUpperCase() || <User className="w-4 h-4" />}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-900 truncate">{user.name}</p>
+                <p className="text-xs text-slate-500 truncate">{user.email}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="p-4 flex-1 overflow-y-auto">
           <nav className="space-y-1">
             {navItems.map((item) => (
@@ -69,8 +94,8 @@ export function MobileNav({ isOpen, onClose, navItems, isOnline }: MobileNavProp
           </nav>
         </div>
 
-        <div className="p-4 border-t border-slate-100 bg-slate-50">
-          <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
+        <div className="p-4 border-t border-slate-100 bg-slate-50 space-y-3">
+          <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Status</span>
             <span className="flex items-center gap-1 font-medium">
               {isOnline ? (
@@ -86,16 +111,29 @@ export function MobileNav({ isOpen, onClose, navItems, isOnline }: MobileNavProp
               )}
             </span>
           </div>
+
           <Link
             to="/research"
             onClick={onClose}
-            className="w-full inline-flex items-center justify-center text-sm font-medium py-2 px-4 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm"
+            className="w-full inline-flex items-center justify-center text-sm font-medium py-2.5 px-4 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm"
           >
             Start Research
           </Link>
+
+          {onLogout && (
+            <button
+              onClick={() => {
+                onClose();
+                onLogout();
+              }}
+              className="w-full flex items-center justify-center gap-2 text-sm font-medium py-2 px-4 rounded-lg text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
   );
 }
-

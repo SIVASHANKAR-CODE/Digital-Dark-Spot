@@ -75,14 +75,16 @@ Backend runs on http://localhost:3001
    - **Start Command**: `npm start`
 3. Environment Variables: Set all from `.env.example`
 
-### Database — MongoDB Atlas (Optional)
+### Database — Supabase (Recommended)
 
-1. Create a free cluster at https://cloud.mongodb.com
-2. Create a database user
-3. Whitelist your backend IP
-4. Copy the connection string to `MONGODB_URI`
+1. Create a free project at https://supabase.com/dashboard
+2. Go to **SQL Editor** and run the contents of `supabase/schema.sql` to create tables
+3. Go to **Settings → API** and copy:
+   - **Project URL** → set as `SUPABASE_URL`
+   - **anon / public key** → set as `SUPABASE_KEY`
+   - **service_role key** → set as `SUPABASE_SERVICE_ROLE_KEY` (used server-side)
 
-The app works without MongoDB using an in-memory store. Data persists only while the server is running.
+The app works without Supabase using a local file-backed / in-memory store. Data persists in `apps/api/data/` while the server is running.
 
 ## AI Provider Setup
 

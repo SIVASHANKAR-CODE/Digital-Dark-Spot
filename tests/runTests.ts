@@ -1,5 +1,7 @@
 import { isUrlSafe } from '../apps/api/src/utils/urlSafety';
 import { DemoProvider } from '../apps/api/src/services/ai/demoProvider';
+import { userStore } from '../apps/api/src/models/userStore';
+import { generateAuthToken, verifyAuthToken } from '../apps/api/src/services/auth/jwtService';
 import type { SourceData } from '../apps/api/src/services/ai';
 
 let passed = 0;
@@ -85,6 +87,52 @@ async function runTestSuite() {
   assert(typeof conflict.claimA.statement === 'string', 'Conflict includes Claim A position');
   assert(typeof conflict.claimB.statement === 'string', 'Conflict includes Claim B position');
   assert(typeof conflict.explanation === 'string', 'Conflict includes discrepancy root cause analysis');
+
+  console.log('\n3. Google & Session Authentication Tests:');
+  // Test A: Create Google user
+  const googleUser = await userStore.createGoogleUser({
+    googleId: 'google_sub_1092837465',
+    email: 'newuser@google.com',
+    name: 'Ada Lovelace',
+    avatar: 'https://lh3.googleusercontent.com/a/photo.jpg',
+  });
+  assert(googleUser.email === 'newuser@google.com', 'Google user registered with verified email');
+  assert(googleUser.role === 'user', 'New Google user assigned safe unprivileged role');
+  assert(googleUser.authProvider === 'google', 'Provider accurately recorded as google');
+  assert(googleUser.emailVerified === true, 'Google email marked verified');
+
+  // Test B: Token generation & verification
+  const { token } = generateAuthToken({
+    userId: googleUser.id,
+    email: googleUser.email,
+    role: googleUser.role,
+  });
+  const decoded = verifyAuthToken(token);
+  assert(decoded.userId === googleUser.id, 'JWT token decodes valid user ID');
+  assert(decoded.role === 'user', 'JWT preserves user role');
+
+  // Test C: Account linking for existing email
+  const linkedUser = await userStore.createGoogleUser({
+    googleId: 'google_sub_linked_999',
+    email: 'newuser@google.com', // same email
+    name: 'Ada Lovelace Updated',
+    avatar: 'https://lh3.googleusercontent.com/updated.jpg',
+  });
+  assert(linkedUser.id === googleUser.id, 'Account linked without creating duplicate user record');
+  assert(linkedUser.googleId === 'google_sub_linked_999', 'Google ID linked successfully');
+
+  // Test D: Local registration duplicate check
+  let duplicateThrew = false;
+  try {
+    await userStore.createLocalUser({
+      name: 'Duplicate',
+      email: 'newuser@google.com',
+      passwordHash: 'hash123',
+    });
+  } catch {
+    duplicateThrew = true;
+  }
+  assert(duplicateThrew, 'Duplicate email registration rejected');
 
   console.log('\n========================================');
   console.log(` RESULTS: ${passed} PASSED, ${failed} FAILED`);

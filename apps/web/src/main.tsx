@@ -3,6 +3,11 @@ import ReactDOM from 'react-dom/client';
 import App from './app/App';
 import './styles/index.css';
 
+// Normalize hostname: Google OAuth origin is registered as 'localhost'
+if (typeof window !== 'undefined' && window.location.hostname === '127.0.0.1') {
+  window.location.replace(window.location.href.replace('//127.0.0.1:', '//localhost:'));
+}
+
 // Register service worker if available in production
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {

@@ -3,21 +3,24 @@
   "version": "1.0.0",
   "private": true,
   "description": "AI-Assisted Information Gap Detection Platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
-    "dev:api": "cd apps/api && npm run dev",
-    "dev:web": "cd apps/web && npm run dev",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"API,WEB\" -c \"cyan.bold,green.bold\" \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm --prefix apps/api run dev",
+    "dev:web": "npm --prefix apps/web run dev",
     "build": "npm run build:shared && npm run build:api && npm run build:web",
-    "build:shared": "cd packages/shared && npm run build",
-    "build:api": "cd apps/api && npm run build",
-    "build:web": "cd apps/web && npm run build",
-    "start": "cd apps/api && npm start",
+    "build:shared": "npm --prefix packages/shared run build",
+    "build:api": "npm --prefix apps/api run build",
+    "build:web": "npm --prefix apps/web run build",
+    "start": "npm --prefix apps/api start",
     "test": "cd apps/api && npx tsx ../../tests/runTests.ts && npx tsx ../../tests/integrationTest.ts",
-    "lint": "cd apps/web && npm run lint",
+    "lint": "npm --prefix apps/web run lint",
     "typecheck": "cd apps/web && npx tsc --noEmit && cd ../api && npx tsc --noEmit"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
   }
 }
-

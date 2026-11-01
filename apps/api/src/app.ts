@@ -7,16 +7,33 @@ import { requestLogger } from './middleware/requestLogger';
 import { errorHandler } from './middleware/errorHandler';
 import researchRoutes from './routes/research';
 import healthRoutes from './routes/health';
+import authRoutes from './routes/auth';
 
 const app = express();
 
 // Security headers
 app.use(helmet());
 
-// CORS configuration
+// CORS configuration — allow localhost and local network devices (e.g. mobile testing)
 app.use(
   cors({
-    origin: config.corsOrigin === '*' ? true : [config.corsOrigin, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      // in dev or hackathon mode, allow localhost, 127.0.0.1, and local LAN IPs (192.168.x, 10.x, etc.)
+      if (
+        config.corsOrigin === '*' ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1') ||
+        origin.startsWith('http://192.168.') ||
+        origin.startsWith('http://10.') ||
+        origin.startsWith('http://172.') ||
+        origin === config.corsOrigin
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
@@ -45,6 +62,7 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // Mount routes
+app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/research', researchRoutes);
 app.use('/api/v1/health', healthRoutes);
 
@@ -63,4 +81,3 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 export default app;
-
