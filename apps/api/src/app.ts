@@ -14,20 +14,17 @@ const app = express();
 // Security headers
 app.use(helmet());
 
-// CORS configuration — allow localhost and local network devices (e.g. mobile testing)
+// CORS configuration — permit production Vercel deployment, localhost, and custom origin
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow requests with no origin (like mobile apps, curl, server-to-server)
+      // allow requests with no origin (mobile apps, curl, serverless)
       if (!origin) return callback(null, true);
-      // in dev or hackathon mode, allow localhost, 127.0.0.1, and local LAN IPs (192.168.x, 10.x, etc.)
       if (
         config.corsOrigin === '*' ||
         origin.includes('localhost') ||
         origin.includes('127.0.0.1') ||
-        origin.startsWith('http://192.168.') ||
-        origin.startsWith('http://10.') ||
-        origin.startsWith('http://172.') ||
+        origin.endsWith('.vercel.app') ||
         origin === config.corsOrigin
       ) {
         return callback(null, true);
@@ -60,11 +57,37 @@ const limiter = rateLimit({
   },
 });
 app.use('/api/', limiter);
+app.use('/v1/', limiter);
 
-// Mount routes
+// Normalize req.url when rewritten through Vercel serverless functions
+app.use((req, res, next) => {
+  if (req.url.startsWith('/api/index')) {
+    req.url = req.url.replace('/api/index', '/api');
+  }
+  next();
+});
+
+// Root & Health status
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'Digital Dark Spot API',
+    status: 'online',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+  });
+});
+app.use('/api/health', healthRoutes);
+app.use('/health', healthRoutes);
+
+// Mount API routes with /api/v1 prefix (standard client URL)
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/research', researchRoutes);
 app.use('/api/v1/health', healthRoutes);
+
+// Also mount routes with /v1 prefix as fallback
+app.use('/v1/auth', authRoutes);
+app.use('/v1/research', researchRoutes);
+app.use('/v1/health', healthRoutes);
 
 // 404 handler
 app.use((req, res) => {

@@ -40,13 +40,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(parsedUser);
           setToken(storedToken);
 
-          // Verify token validity against the backend if backend is available
+          // Verify token validity against backend session endpoint
           try {
             const verified = await apiGetCurrentUser();
             setUser(verified);
             localStorage.setItem(AUTH_USER_KEY, JSON.stringify(verified));
           } catch (err: any) {
-            // Only clear session if backend explicitly rejected with 401 Unauthorized
+            // If the server rejected token with 401 Unauthorized, clean session
             if (err?.status === 401) {
               localStorage.removeItem(AUTH_USER_KEY);
               localStorage.removeItem(AUTH_TOKEN_KEY);
@@ -76,74 +76,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const loginWithGoogle = async (idToken: string): Promise<UserProfile> => {
-    try {
-      const data = await apiLoginWithGoogle(idToken);
-      setAuthSession(data.user, data.token);
-      return data.user;
-    } catch (err: any) {
-      console.warn('[Auth] Server Google authentication endpoint unavailable, resolving verified identity on client:', err);
-      // Fallback if backend API is not configured or returns 405 / 404 / 500 / network failure
-      if (err?.status === 405 || err?.status === 404 || err?.status === 500 || !err?.status) {
-        try {
-          const base64Url = idToken.split('.')[1];
-          if (base64Url) {
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(
-              atob(base64)
-                .split('')
-                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                .join('')
-            );
-            const payload = JSON.parse(jsonPayload);
-            if (payload && (payload.email || payload.sub)) {
-              const fallbackUser: UserProfile = {
-                id: payload.sub || 'usr_google_' + Date.now().toString(36),
-                email: payload.email || 'user@google.com',
-                name: payload.name || payload.email?.split('@')[0] || 'Google Researcher',
-                avatar: payload.picture,
-                role: 'user',
-                authProvider: 'google',
-                emailVerified: Boolean(payload.email_verified ?? true),
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                lastLoginAt: new Date().toISOString(),
-              };
-              setAuthSession(fallbackUser, idToken);
-              return fallbackUser;
-            }
-          }
-        } catch (decodeErr) {
-          console.error('[Auth] Failed decoding Google token:', decodeErr);
-        }
-      }
-      throw new Error(err.message || 'Google authentication failed. Please try again.');
-    }
+    const data = await apiLoginWithGoogle(idToken);
+    setAuthSession(data.user, data.token);
+    return data.user;
   };
 
   const loginWithEmail = async (email: string, password: string): Promise<UserProfile> => {
-    try {
-      const data = await apiLoginWithEmail(email, password);
-      setAuthSession(data.user, data.token);
-      return data.user;
-    } catch (err: any) {
-      // Fallback for development/standalone if backend auth endpoint is offline or 405
-      if (err?.status === 405 || err?.status === 500 || err?.status === 404 || !err?.status) {
-        const fallbackUser: UserProfile = {
-          id: 'usr_' + Date.now().toString(36),
-          email,
-          name: email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-          role: 'user',
-          authProvider: 'local',
-          emailVerified: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        const mockToken = 'dds_local_mock_' + Date.now();
-        setAuthSession(fallbackUser, mockToken);
-        return fallbackUser;
-      }
-      throw new Error(err.message || 'Invalid email or password.');
-    }
+    const data = await apiLoginWithEmail(email, password);
+    setAuthSession(data.user, data.token);
+    return data.user;
   };
 
   const registerWithEmail = async (
@@ -151,29 +92,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string
   ): Promise<UserProfile> => {
-    try {
-      const data = await apiRegisterWithEmail(name, email, password);
-      setAuthSession(data.user, data.token);
-      return data.user;
-    } catch (err: any) {
-      // Fallback for development/standalone if backend auth endpoint is offline or 405
-      if (err?.status === 405 || err?.status === 500 || err?.status === 404 || !err?.status) {
-        const fallbackUser: UserProfile = {
-          id: 'usr_' + Date.now().toString(36),
-          email,
-          name,
-          role: 'user',
-          authProvider: 'local',
-          emailVerified: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        const mockToken = 'dds_local_mock_' + Date.now();
-        setAuthSession(fallbackUser, mockToken);
-        return fallbackUser;
-      }
-      throw new Error(err.message || 'Registration failed.');
-    }
+    const data = await apiRegisterWithEmail(name, email, password);
+    setAuthSession(data.user, data.token);
+    return data.user;
   };
 
   const logout = () => {
@@ -181,9 +102,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(AUTH_TOKEN_KEY);
     setUser(null);
     setToken(null);
-    try {
-      window.google?.accounts.id.disableAutoSelect();
-    } catch {}
   };
 
   return (
@@ -191,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         token,
-        isAuthenticated: !!user,
+        isAuthenticated: !!token && !!user,
         isLoading,
         loginWithGoogle,
         loginWithEmail,
@@ -204,9 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useAuth(): AuthContextType {
+export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

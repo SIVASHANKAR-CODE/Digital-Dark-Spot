@@ -9,8 +9,6 @@ export interface VerifiedGoogleUser {
   emailVerified: boolean;
 }
 
-const client = new OAuth2Client(config.googleClientId);
-
 /**
  * Verify a Google ID token received from the client using official Google Identity Services.
  * Validates token signature, audience, expiration, and issuer.
@@ -20,32 +18,40 @@ export async function verifyGoogleToken(idToken: string): Promise<VerifiedGoogle
     throw new Error('A valid Google ID token string is required.');
   }
 
-  // If no GOOGLE_CLIENT_ID is configured yet (e.g. initial setup before keys are pasted in .env),
-  // we check if the token is a standard JWT structure or development test token
-  const audience = config.googleClientId || undefined;
+  const clientId =
+    config.googleClientId ||
+    process.env.GOOGLE_CLIENT_ID ||
+    process.env.VITE_GOOGLE_CLIENT_ID ||
+    undefined;
 
+  const client = new OAuth2Client(clientId);
   let payload: TokenPayload | undefined;
 
   try {
     const ticket = await client.verifyIdToken({
       idToken,
-      audience,
+      audience: clientId,
     });
     payload = ticket.getPayload();
   } catch (error: any) {
-    // If client ID was not set, allow graceful development fallback or surface clear message
-    if (!config.googleClientId) {
+    // If client ID was not set, try verifying against Google's public certs without fixed audience
+    if (!clientId) {
       console.warn(
-        '[GoogleAuth] Warning: GOOGLE_CLIENT_ID is not configured in environment. In production, configure GOOGLE_CLIENT_ID in apps/api/.env.'
+        '[GoogleAuth] Warning: GOOGLE_CLIENT_ID is not configured in backend environment. Checking signature with Google certs.'
       );
-      // Try to parse unverified payload in non-production local development if user is testing with mock or raw token
-      if (config.nodeEnv !== 'production') {
-        const parts = idToken.split('.');
-        if (parts.length === 3) {
-          try {
-            const raw = Buffer.from(parts[1], 'base64').toString('utf-8');
-            payload = JSON.parse(raw);
-          } catch {}
+      try {
+        const ticketWithoutAud = await client.verifyIdToken({ idToken });
+        payload = ticketWithoutAud.getPayload();
+      } catch (fallbackError: any) {
+        // In local development mode only, check JWT format
+        if (config.nodeEnv !== 'production') {
+          const parts = idToken.split('.');
+          if (parts.length === 3) {
+            try {
+              const raw = Buffer.from(parts[1], 'base64').toString('utf-8');
+              payload = JSON.parse(raw);
+            } catch {}
+          }
         }
       }
     }
@@ -71,4 +77,3 @@ export async function verifyGoogleToken(idToken: string): Promise<VerifiedGoogle
     emailVerified: Boolean(payload.email_verified),
   };
 }
-
