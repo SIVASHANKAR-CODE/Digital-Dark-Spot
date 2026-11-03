@@ -11,6 +11,9 @@ import authRoutes from './routes/auth';
 
 const app = express();
 
+// Trust reverse proxies (Vercel, Cloudflare, AWS, Nginx) so client IP and rate-limiting work properly
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(helmet());
 
@@ -35,6 +38,14 @@ app.use(
   })
 );
 
+// If Vercel pre-parsed the body, mark it so body-parser doesn't try to re-read the consumed stream
+app.use((req, _res, next) => {
+  if ((req as any).body && typeof (req as any).body === 'object') {
+    (req as any)._body = true;
+  }
+  next();
+});
+
 // Body parsers
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -48,6 +59,10 @@ const limiter = rateLimit({
   max: config.rateLimitMaxRequests,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: {
+    trustProxy: false,
+    xForwardedForHeader: false,
+  },
   message: {
     success: false,
     error: {
@@ -60,7 +75,7 @@ app.use('/api/', limiter);
 app.use('/v1/', limiter);
 
 // Normalize req.url when rewritten through Vercel serverless functions
-app.use((req, res, next) => {
+app.use((req, _res, next) => {
   if (req.url.startsWith('/api/index')) {
     req.url = req.url.replace('/api/index', '/api');
   }

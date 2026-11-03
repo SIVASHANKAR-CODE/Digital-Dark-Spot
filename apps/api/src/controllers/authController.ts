@@ -68,6 +68,7 @@ export async function googleAuth(req: Request, res: Response, next: NextFunction
 
     return res.status(200).json(response);
   } catch (error: any) {
+    console.error('[GoogleAuth] Authentication failure:', error?.message || error);
     return res.status(401).json({
       success: false,
       error: {
