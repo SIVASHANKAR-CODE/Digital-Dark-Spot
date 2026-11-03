@@ -284,7 +284,7 @@ export function ResearchWorkspacePage() {
       </div>
 
       {/* Demo Notification Banner if using benchmark mode */}
-      <DemoNotice />
+      {session.analysis?.modelUsed === 'demo' && <DemoNotice />}
 
       {error && <ErrorAlert title="Execution Alert" message={error} onRetry={loadSession} />}
 
